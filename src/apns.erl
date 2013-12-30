@@ -193,20 +193,22 @@ get_env(K, Def) ->
 
 default_connection() ->
   DefaultConn = #apns_connection{},
-  DefaultConn#apns_connection{apple_host      = get_env(apple_host,       DefaultConn#apns_connection.apple_host),
-                              apple_port      = get_env(apple_port,       DefaultConn#apns_connection.apple_port),
-                              key_file        = get_env(key_file,         DefaultConn#apns_connection.key_file),
-                              cert_file       = get_env(cert_file,        DefaultConn#apns_connection.cert_file),
-                              timeout         = get_env(timeout,          DefaultConn#apns_connection.timeout),
-                              error_fun       = case get_env(error_fun,   DefaultConn#apns_connection.error_fun) of
-                                                  {M, F} -> fun(I, S) -> M:F(I, S) end;
-                                                  Other -> Other
-                                                end,
-                              feedback_timeout= get_env(feedback_timeout, DefaultConn#apns_connection.feedback_timeout),
-                              feedback_fun    = case get_env(feedback_fun,DefaultConn#apns_connection.feedback_fun) of
-                                                  {M, F} -> fun(T) -> M:F(T) end;
-                                                  Other -> Other
-                                                end,
-                              feedback_host   = get_env(feedback_host,    DefaultConn#apns_connection.feedback_host),
-                              feedback_port   = get_env(feedback_port,    DefaultConn#apns_connection.feedback_port)
-                             }.
+  DefaultConn#apns_connection{
+    apple_host      = get_env(apple_host,       DefaultConn#apns_connection.apple_host),
+    apple_port      = get_env(apple_port,       DefaultConn#apns_connection.apple_port),
+    key_file        = get_env(key_file,         DefaultConn#apns_connection.key_file),
+    cert_file       = get_env(cert_file,        DefaultConn#apns_connection.cert_file),
+    timeout         = get_env(timeout,          DefaultConn#apns_connection.timeout),
+    error_fun       = case get_env(error_fun,   DefaultConn#apns_connection.error_fun) of
+                        {M, F} -> fun(I, S) -> M:F(I, S) end;
+                        Other -> Other
+                      end,
+    feedback_timeout= get_env(feedback_timeout, DefaultConn#apns_connection.feedback_timeout),
+    feedback_fun    = case get_env(feedback_fun,DefaultConn#apns_connection.feedback_fun) of
+                        {M, F} -> fun(T) -> M:F(T) end;
+                        Other -> Other
+                      end,
+    feedback_host   = get_env(feedback_host,    DefaultConn#apns_connection.feedback_host),
+    feedback_port   = get_env(feedback_port,    DefaultConn#apns_connection.feedback_port),
+    expires_conn    = get_env(expires_conn,     DefaultConn#apns_connection.expires_conn)
+  }.
