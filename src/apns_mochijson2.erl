@@ -154,7 +154,7 @@ json_encode({Props}, State) when is_list(Props) ->
 json_encode({json, IoList}, _State) ->
     IoList;
 json_encode(Bad, #encoder{handler=null}) ->
-    exit({json_encode, {bad_term, Bad}});
+    throw({json_encode, {bad_term, Bad}});
 json_encode(Bad, State=#encoder{handler=Handler}) ->
     json_encode(Handler(Bad), State).
 
@@ -290,7 +290,7 @@ json_encode_string_unicode([C | Cs], State, Acc) ->
                C when C < 16#7f ->
                    [C | Acc];
                _ ->
-                   exit({json_encode, {bad_char, C}})
+                   throw({json_encode, {bad_char, C}})
            end,
     json_encode_string_unicode(Cs, State, Acc1).
 

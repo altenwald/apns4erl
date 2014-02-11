@@ -143,13 +143,19 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
     false ->
       Connection = State#state.connection,
       Timeout = epoch() + Connection#apns_connection.expires_conn,
-      Payload = build_payload(Msg),
-      BinToken = hexstr_to_bin(Msg#apns_msg.device_token),
-      case send_payload(Socket, Msg#apns_msg.id, Msg#apns_msg.expiry, BinToken, Payload) of
-        ok ->
-          {noreply, State#state{out_expires = Timeout}};
-        {error, Reason} ->
-          {stop, {error, Reason}, State}
+      try
+        Payload = build_payload(Msg),
+        BinToken = hexstr_to_bin(Msg#apns_msg.device_token),
+        case send_payload(Socket, Msg#apns_msg.id, Msg#apns_msg.expiry, BinToken, Payload) of
+          ok ->
+            {noreply, State#state{out_expires = Timeout}};
+          {error, Reason} ->
+            {stop, {error, Reason}, State}
+        end
+      catch 
+        Class:ErrorReason ->
+          lager:error("~p:~p~n", [Class, ErrorReason]),
+          {noreply, State#state{out_expires = Timeout}}
       end
   end;
 
