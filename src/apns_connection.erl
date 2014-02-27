@@ -154,7 +154,7 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
         end
       catch 
         Class:ErrorReason ->
-          lager:error("~p:~p~n", [Class, ErrorReason]),
+          error_logger:error_msg("~p:~p~n", [Class, ErrorReason]),
           {noreply, State#state{out_expires = Timeout}}
       end
   end;
