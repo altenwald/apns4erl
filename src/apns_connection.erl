@@ -324,10 +324,11 @@ parse_status(1) -> processing_error;
 parse_status(2) -> missing_token;
 parse_status(3) -> missing_topic;
 parse_status(4) -> missing_payload;
-parse_status(5) -> missing_token_size;
-parse_status(6) -> missing_topic_size;
-parse_status(7) -> missing_payload_size;
+parse_status(5) -> invalid_token_size;
+parse_status(6) -> invalid_topic_size;
+parse_status(7) -> invalid_payload_size;
 parse_status(8) -> invalid_token;
+parse_status(10) -> shutdown;
 parse_status(_) -> unknown.
 
 epoch() ->
