@@ -298,8 +298,8 @@ send_payload(Socket, MsgId, Expiry, BinToken, Payload) ->
                 BinToken/binary,
                 PayloadLength:16/big,
                 BinPayload/binary>>],
-    error_logger:info_msg("Sending msg ~p (expires on ~p)~n",
-                         [MsgId, Expiry]),
+    error_logger:info_msg("Sending msg ~p (expires on ~p, size=~p)~n",
+                         [MsgId, Expiry, PayloadLength]),
     ssl:send(Socket, Packet).
 
 hexstr_to_bin(S) ->
