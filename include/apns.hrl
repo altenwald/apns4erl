@@ -15,6 +15,8 @@
     expires_conn      = 300                                   :: pos_integer()
 }).
 
+-type apns_connection() :: #apns_connection{}.
+
 -record(apns_msg, {
     id = apns:message_id()       :: binary(),
     expiry = apns:expiry(86400)  :: non_neg_integer(), %% default = 1 day
@@ -25,3 +27,5 @@
     apns_extra = []              :: none | [{atom(), integer()|boolean()|string()}],
     extra = []                   :: [mochijson2:json_property()]
 }).
+
+-type apns_msg() :: #apns_msg{}.
