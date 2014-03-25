@@ -143,6 +143,7 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
     false ->
       Connection = State#state.connection,
       Timeout = epoch() + Connection#apns_connection.expires_conn,
+      apns_queue:in(Msg),
       try
         Payload = build_payload(Msg),
         BinToken = hexstr_to_bin(Msg#apns_msg.device_token),
@@ -150,10 +151,12 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
           ok ->
             {noreply, State#state{out_expires = Timeout}};
           {error, Reason} ->
+            apns_queue:fail(Msg#apns_msg.id),
             {stop, {error, Reason}, State}
         end
       catch 
         Class:ErrorReason ->
+          apns_queue:fail(Msg#apns_msg.id),
           error_logger:error_msg("~p:~p~n", [Class, ErrorReason]),
           {noreply, State#state{out_expires = Timeout}}
       end
@@ -173,7 +176,10 @@ handle_info({ssl, SslSocket, Data}, State = #state{out_socket = SslSocket,
       case Command of
         8 -> %% Error
           Status = parse_status(StatusCode),
-          try Error(MsgId, Status) of
+          {MsgFailed, RestMsg} = apns_queue:fail(MsgId),
+          SendMsg = fun(M) -> send_message(self(), M) end,
+          lists:foreach(SendMsg, RestMsg),
+          try Error(MsgFailed, Status) of
             stop -> throw({stop, {msg_error, MsgId, Status}, State});
             _ -> noop
           catch
@@ -273,13 +279,14 @@ do_build_payload([{Key,Value}|Params], Payload) ->
       Json = {case Body of
                 none -> [];
                 Body -> [{<<"body">>, unicode:characters_to_binary(Body)}]
-              end ++ case Action of
-                       none -> [];
-                       Action -> [{<<"action-loc-key">>, unicode:characters_to_binary(Action)}]
-                     end ++ case Image of
-                              none -> [];
-                              Image -> [{<<"launch-image">>, unicode:characters_to_binary(Image)}]
-                            end ++
+              end ++ 
+              case Action of
+                none -> [];
+                Action -> [{<<"action-loc-key">>, unicode:characters_to_binary(Action)}]
+              end ++ case Image of
+                none -> [];
+                Image -> [{<<"launch-image">>, unicode:characters_to_binary(Image)}]
+              end ++
                 [{<<"loc-key">>, unicode:characters_to_binary(LocKey)},
                  {<<"loc-args">>, lists:map(fun unicode:characters_to_binary/1, Args)}]},
       do_build_payload(Params, [{atom_to_binary(Key, utf8), Json} | Payload]);

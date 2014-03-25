@@ -26,20 +26,19 @@ start_link() ->
 %% @hidden
 -spec start_connection(#apns_connection{}) -> {ok, pid()} | {error, term()}.
 start_connection(Connection) ->
-  supervisor:start_child(?MODULE, [Connection]).
+    supervisor:start_child(?MODULE, [Connection]).
 
 %% @hidden
 -spec start_connection(atom(), #apns_connection{}) -> {ok, pid()} | {error, term()}.
 start_connection(Name, Connection) ->
-  supervisor:start_child(?MODULE, [Name, Connection]).
+    supervisor:start_child(?MODULE, [Name, Connection]).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 %% @hidden
--spec init(_) ->  {ok, {{simple_one_for_one, 5, 10}, [{connection, {apns_connection, start_link, []}, transient, 5000, worker, [apns_connection]}]}}.
-init(_) ->
-  {ok,
-   {{simple_one_for_one, 5, 10},
-    [{connection, {apns_connection, start_link, []},
-      transient, 5000, worker, [apns_connection]}]}}.
+-spec init([]) ->  {ok, {{supervisor:strategy(), MaxR::non_neg_integer(), MaxT::pos_integer()}, [supervisor:child_spec()]}}.
+init([]) ->
+    {ok, {{simple_one_for_one, 5, 10}, [
+        {connection, {apns_connection, start_link, []}, transient, 5000, worker, [apns_connection]}
+    ]}}.
