@@ -11,17 +11,15 @@
 
 -behaviour(gen_server).
 
--define(SERVER, ?MODULE).
 -define(QUEUE, queue).
-
 -define(DEFAULT_MAX_ENTRIES, 1000).
 
 -export([
     start_link/0,
-    stop/0,
+    stop/1,
 
-    in/1,
-    fail/1,
+    in/2,
+    fail/2,
 
     % callbacks
     init/1, 
@@ -43,22 +41,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc  Stops the connection
--spec stop() -> ok.
-stop() ->
-  gen_server:cast(?SERVER, stop).
+-spec stop(QID :: pid()) -> ok.
+stop(QID) ->
+  gen_server:cast(QID, stop).
 
--spec in(Msg :: apns_msg()) -> ok.
-in(Msg) ->
-    gen_server:cast(?SERVER, {in, Msg}).
+-spec in(QID :: pid(), Msg :: apns_msg()) -> ok.
+in(QID, Msg) ->
+    gen_server:cast(QID, {in, Msg}).
 
--spec fail(ID :: binary()) -> [apns_msg()].
-fail(ID) ->
-    gen_server:call(?SERVER, {fail, ID}).
+-spec fail(QID :: pid(), ID :: binary()) -> [apns_msg()].
+fail(QID, ID) ->
+    gen_server:call(QID, {fail, ID}).
 
 %% @hidden
 -spec start_link() -> {ok, pid()} | {error, {already_started, pid()}}.
 start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+  gen_server:start_link(?MODULE, [], []).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Server implementation, a.k.a.: callbacks

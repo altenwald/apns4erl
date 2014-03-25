@@ -21,7 +21,8 @@
                 connection        :: #apns_connection{},
                 in_buffer = <<>>  :: binary(),
                 out_buffer = <<>> :: binary(),
-                out_expires       :: integer()}).
+                out_expires       :: integer(),
+                queue             :: pid()}).
 -type state() :: #state{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,10 +56,16 @@ start_link(Connection) ->
 -spec init(#apns_connection{}) -> {ok, state()} | {stop, term()}.
 init(Connection) ->
   try
+    {ok, QID} = apns_queue:start_link(),
     Timeout = epoch() + Connection#apns_connection.expires_conn,
     case open_out(Connection) of
       {ok, OutSocket} -> case open_feedback(Connection) of
-          {ok, InSocket} -> {ok, #state{out_socket=OutSocket, in_socket=InSocket, connection=Connection, out_expires=Timeout}};
+          {ok, InSocket} -> {ok, #state{
+            out_socket=OutSocket, 
+            in_socket=InSocket, 
+            connection=Connection, 
+            out_expires=Timeout,
+            queue=QID}};
           {error, Reason} -> {stop, Reason}
         end;
       {error, Reason} -> {stop, Reason}
@@ -143,7 +150,7 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
     false ->
       Connection = State#state.connection,
       Timeout = epoch() + Connection#apns_connection.expires_conn,
-      apns_queue:in(Msg),
+      apns_queue:in(State#state.queue, Msg),
       try
         Payload = build_payload(Msg),
         BinToken = hexstr_to_bin(Msg#apns_msg.device_token),
@@ -151,12 +158,12 @@ handle_cast(Msg, State) when is_record(Msg, apns_msg) ->
           ok ->
             {noreply, State#state{out_expires = Timeout}};
           {error, Reason} ->
-            apns_queue:fail(Msg#apns_msg.id),
+            apns_queue:fail(State#state.queue, Msg#apns_msg.id),
             {stop, {error, Reason}, State}
         end
       catch 
         Class:ErrorReason ->
-          apns_queue:fail(Msg#apns_msg.id),
+          apns_queue:fail(State#state.queue, Msg#apns_msg.id),
           error_logger:error_msg("~p:~p~n", [Class, ErrorReason]),
           {noreply, State#state{out_expires = Timeout}}
       end
@@ -176,7 +183,7 @@ handle_info({ssl, SslSocket, Data}, State = #state{out_socket = SslSocket,
       case Command of
         8 -> %% Error
           Status = parse_status(StatusCode),
-          {MsgFailed, RestMsg} = apns_queue:fail(MsgId),
+          {MsgFailed, RestMsg} = apns_queue:fail(State#state.queue, MsgId),
           SendMsg = fun(M) -> send_message(self(), M) end,
           lists:foreach(SendMsg, RestMsg),
           try Error(MsgFailed, Status) of
