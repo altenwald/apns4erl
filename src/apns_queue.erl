@@ -49,7 +49,8 @@ stop(QID) ->
 in(QID, Msg) ->
     gen_server:cast(QID, {in, Msg}).
 
--spec fail(QID :: pid(), ID :: binary()) -> [apns_msg()].
+-spec fail(QID :: pid(), ID :: binary()) -> 
+    {apns_msg() | undefined, [apns_msg()]}.
 fail(QID, ID) ->
     gen_server:call(QID, {fail, ID}).
 
@@ -117,5 +118,7 @@ recover_fail(ID, Queue) ->
         (#apns_msg{expiry=Expiry}) -> Expiry > Now
     end, Queue)),
     DropWhile = fun(#apns_msg{id=I}) -> I =/= ID end,
-    [Failed|RestToRetry] = lists:dropwhile(DropWhile, List),
-    {Failed, RestToRetry}.
+    case lists:dropwhile(DropWhile, List) of
+        [Failed|RestToRetry] -> {Failed, RestToRetry};
+        [] -> {undefined, List}
+    end.
