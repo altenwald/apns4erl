@@ -246,6 +246,10 @@ code_change(_OldVsn, State, _Extra) ->  {ok, State}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sound(Sound) when is_binary(Sound) -> [{sound, Sound}];
+sound(none) -> [];
+sound(undefined) -> [].
+
 -spec build_payload(#apns_msg{}) -> iolist(). 
 build_payload(#apns_msg{alert = Alert,
                         badge = Badge,
@@ -253,8 +257,7 @@ build_payload(#apns_msg{alert = Alert,
                         apns_extra=Apns_Extra,
                         extra = Extra}) ->
     build_payload([{alert, Alert},
-                   {badge, Badge},
-                   {sound, Sound}] ++ Apns_Extra, Extra).
+                   {badge, Badge}] ++ sound(Sound) ++ Apns_Extra, Extra).
 
 build_payload(Params, Extra) ->
   apns_mochijson2:encode(

@@ -73,11 +73,13 @@ Actually, send\_message/3, send\_message/4, send\_message/5, send\_message/6, se
     apns:send_message(my_connection_name, #apns_msg{
       alert  = "alert" ,
       badge  = 1,
-      sound  = "sound" ,
+      sound  = <<"sound">>,
       expiry = 1348000749,
       device_token = "this_is_a_valid_device_token"
     }).
 ```
+
+You can specify sound as a binary (the name of a sound to be reproduced) or as `none` or `undefined` to avoid to reproduce a sound.
 
 Feedback Channel and Getting Errors
 ===================================
