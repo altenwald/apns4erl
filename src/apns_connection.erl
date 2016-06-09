@@ -251,10 +251,17 @@ build_payload(#apns_msg{alert = Alert,
                         badge = Badge,
                         sound = Sound,
                         apns_extra=Apns_Extra,
-                        extra = Extra}) ->
-    build_payload([{alert, Alert},
-                   {badge, Badge},
-                   {sound, Sound}] ++ Apns_Extra, Extra).
+                        extra = Extra} = Msg) ->
+    if is_binary(Sound) -> 
+        build_payload([{alert, Alert},
+           {badge, Badge},
+           {sound, Sound}] ++ Apns_Extra, Extra);
+    true -> 
+        % skip 'sound' field if parameter Sound == none
+        % push notification will come without sound, iOS >= 7.0
+        build_payload([{alert, Alert},
+                       {badge, Badge}] ++ Apns_Extra, Extra)
+    end.
 
 build_payload(Params, Extra) ->
   apns_mochijson2:encode(
