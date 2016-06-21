@@ -265,10 +265,12 @@ code_change(_OldVsn, State, _Extra) ->  {ok, State}.
 build_payload(#apns_msg{alert = Alert,
                         badge = Badge,
                         sound = Sound,
+                        category = Category,
                         apns_extra=Apns_Extra,
                         extra = Extra}) ->
     build_payload([{alert, Alert},
                    {badge, Badge},
+                   {category, Category},
                    {sound, Sound}] ++ Apns_Extra, Extra).
 
 build_payload(Params, Extra) ->
