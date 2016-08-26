@@ -80,9 +80,11 @@ open_out(Connection) ->
     undefined -> [];
     Filename -> [{keyfile, filename:absname(Filename)}]
   end,
+  %% alternative to patching ssl_cipher.erl, ask for 'tlsv1.1' connection
+  %% http://erlang.2086793.n4.nabble.com/SSL-connection-problem-td4712676.html
   SslOpts = [
     {certfile, filename:absname(Connection#apns_connection.cert_file)},
-    {mode, binary} | KeyFile
+    {mode, binary}, {versions,['tlsv1']}  | KeyFile
   ],
   RealSslOpts = case Connection#apns_connection.cert_password of
     undefined -> SslOpts;
@@ -106,7 +108,7 @@ open_feedback(Connection) ->
   end,
   SslOpts = [
     {certfile, filename:absname(Connection#apns_connection.cert_file)},
-    {mode, binary} | KeyFile
+    {mode, binary}, {versions,['tlsv1']}  | KeyFile
   ],
   RealSslOpts = case Connection#apns_connection.cert_password of
     undefined -> SslOpts;
